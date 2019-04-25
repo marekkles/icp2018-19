@@ -9,8 +9,8 @@
 class Queen : public FigureBase
 {
 public:
-    Queen(FigureColor_t color, Position * position);
-    virtual bool VerifyMove(Move * move); 
+    using FigureBase::FigureBase;
+    virtual bool VerifyMove(Move & move); 
 	virtual ~Queen() = default;
 };
 

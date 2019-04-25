@@ -1,41 +1,44 @@
-#ifndef __MOVE_H
+#ifndef __GAME_H
 
-#define __MOVE_H
+#define __GAME_H
+
 #include <list>
 #include <vector>
 #include <string>
 #include "Move.h"
+#include "FigureFactory.h"
 
-typedef enum {NOBODY, PLAYER_WHITE, PLAYER_BLACK} GamePlayer_t;
 
 class Game
 {
 private:
+	FigureFactory _figureFactory;
 	int _whitesScore;
 	int _blacksScore;
-	string _inputFileName;
-	void GenerateFigures();
-	void LoadDoList();
-	void TestCheck();
-	bool CheckMove(Move * move);
-	bool TryMove(Move * move);
-	void MakeMove(Move * move);
+	std::string _inputFileName;
+	void _generateFigures();
+	void _loadDoList();
+	bool _isCheck();
+	bool _checkMove(Move & move);
+	bool _tryMove(Move & move);
+	void _forceMove(FigureBase & figure,Move & move);
 public:
-	std::list<Move *> DoMoves;
-	std::list<Move *> UndoMoves;
-	std::vector<FigureBase *> Figures;
-	GamePlayer_t PlayerTurn;
-	GamePlayer_t Winner;
+	std::list<Move> DoMoves;
+	std::list<Move> UndoMoves;
+	std::vector<FigureBase> * Figures;
+	FigureColor_t PlayerTurn;
+	FigureColor_t Winner;
 	bool GameEnd;
 	bool Check;
 
-	int GetPlayerScore(GamePlayer_t player);
+	FigureColor_t GetFigureColorAt(Position & position);
+	FigureType_t GetFigureTypeAt(Position & position);
 	bool NextMove();
 	void PreviousMove();
-	bool UserMove(Move * move);
+	bool UserMove(Move & move);
 
 	Game();
-	Game(string fileName);
+	Game(std::string fileName);
 	~Game();
 };
 

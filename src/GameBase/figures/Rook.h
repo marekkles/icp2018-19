@@ -9,8 +9,8 @@
 class Rook : public FigureBase
 {
 public:
-    Rook(FigureColor_t color, Position * position);
-    virtual bool VerifyMove(Move * move); 
+    using FigureBase::FigureBase;
+    virtual bool VerifyMove(Move & move); 
 	virtual ~Rook() = default;
 };
 

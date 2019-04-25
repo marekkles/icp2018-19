@@ -9,11 +9,18 @@
 class Move
 {
 public:
-    Move(std::string * inputMove);
+    Move(FigureType_t figureType, Position & to);
+    Move(std::string & inputMove);
     ~Move();
     FigureType_t FigureType;
-    Position * From;
-    Position * To;
+    FigureType_t ChangeTo;
+    Position From;
+    Position To;
+    bool ValidMove;
+    bool UseFrom;
+    bool Checkmate;
+    bool Check;
+    bool Take;
 };
 
 

@@ -1,27 +1,25 @@
 #ifndef __FIGURE_FACTORY_H
 
 #define __FIGURE_FACTORY_H
-
-#include "figures/Bishop.h"
-#include "figures/King.h"
-#include "figures/Knight.h"
-#include "figures/Pawn.h"
-#include "figures/Queen.h"
-#include "figures/Rook.h"
+#include <vector>
 
 #include "FigureBase.h"
+#include "Game.h"
 
 class FigureFactory {
-protected:
+private:
+	Game * _game;
 public:
-	
-    virtual FigureBase* CreateFigure(FigureType_t type);
-	
-	virtual void FreeFigure(FigureBase *figure);
-	
+	std::vector<FigureBase> Figures;
+    void CreateFigure(FigureType_t type, FigureColor_t color, Position & initialPosition, Game * game);
+	FigureBase & FigureAtPosition(Position & position);
+	FigureBase & GetKing(FigureColor_t color);
+	FigureType_t FigureTypeAtPosition(Position & position);
+	FigureColor_t FigureColorAtPosition(Position & position);
+	void DeleteFigure(FigureBase & figure);
 	FigureFactory();
-	
-	virtual ~FigureFactory();
+	FigureFactory(Game * game);
+	~FigureFactory();
 };
 
 
