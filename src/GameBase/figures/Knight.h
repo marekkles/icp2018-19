@@ -1,8 +1,8 @@
 #ifndef __KNIGHT_H
 
 #define __KNIGHT_H
-#include "../FigureBase.h"
 
+#include "../Enums.h"
 #include "../FigureBase.h"
 #include "../Move.h"
 

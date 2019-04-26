@@ -3,15 +3,19 @@
 #define __MOVE_H
 
 #include <string>
+
+#include "ClassDeclarations.h"
+#include "Enums.h"
 #include "Position.h"
 #include "FigureBase.h"
 
 class Move
 {
 public:
-    Move(FigureType_t figureType, Position & to);
+    Move() = default;
+    Move(FigureType_t figureType, const Position & to);
     Move(std::string & inputMove);
-    ~Move();
+    ~Move() = default;
     FigureType_t FigureType;
     FigureType_t ChangeTo;
     Position From;

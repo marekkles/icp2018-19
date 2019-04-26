@@ -37,24 +37,28 @@ FigureBase::FigureBase(FigureType_t figureType, FigureColor_t figureColor, Posit
     this->_type = figureType;
 }
 
-FigureType_t FigureBase::GetType()
+FigureType_t FigureBase::GetType() const
 {
     return this->_type;
 }
 
-Position & FigureBase::GetPosition()
+const Position & FigureBase::GetPosition() const
 {
     return this->_position;
 }
 
-FigureColor_t FigureBase::GetColor()
+FigureColor_t FigureBase::GetColor() const
 {
     return this->_color;
 }
 
-FigureColor_t FigureBase::GetOpositeColor()
+FigureColor_t FigureBase::GetOpositeColor() const
 {
     return (this->_color == WHITE)?BLACK:WHITE;
+}
+Game * FigureBase::GetGame() const
+{
+    return _game;
 }
 
 void FigureBase::ForceMove(Move & move)
@@ -76,9 +80,9 @@ bool FigureBase::TryMove(Move & move)
     
 }
 
-bool FigureBase::operator==(FigureBase & op1)
+bool FigureBase::operator==(const FigureBase & op1) const
 {
-    return this->_color == op1.GetColor && this->_position == op1.GetPosition && this->_type == op1.GetType;
+    return this->_color == op1.GetColor() && this->_position == op1.GetPosition() && this->_type == op1.GetType();
 }
 
 void FigureBase::MoveTo(Position & position)

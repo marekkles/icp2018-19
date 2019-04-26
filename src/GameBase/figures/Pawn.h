@@ -1,8 +1,8 @@
 #ifndef __PAWN_H
 
 #define __PAWN_H
-#include "../FigureBase.h"
 
+#include "../Enums.h"
 #include "../FigureBase.h"
 #include "../Move.h"
 

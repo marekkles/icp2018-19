@@ -3,16 +3,20 @@
 #define __GAME_H
 
 #include <list>
-#include <vector>
 #include <string>
-#include "Move.h"
-#include "FigureFactory.h"
+#include <iostream>
+#include <fstream>
 
+#include "ClassDeclarations.h"
+#include "Enums.h"
+#include "Move.h"
+#include "FigureBase.h"
+#include "FigureFactory.h"
 
 class Game
 {
 private:
-	FigureFactory _figureFactory;
+	FigureFactory * _figureFactory;
 	int _whitesScore;
 	int _blacksScore;
 	std::string _inputFileName;
@@ -25,7 +29,7 @@ private:
 public:
 	std::list<Move> DoMoves;
 	std::list<Move> UndoMoves;
-	std::vector<FigureBase> * Figures;
+	const std::list<FigureBase *> * Figures;
 	FigureColor_t PlayerTurn;
 	FigureColor_t Winner;
 	bool GameEnd;
@@ -36,6 +40,7 @@ public:
 	bool NextMove();
 	void PreviousMove();
 	bool UserMove(Move & move);
+	bool LoadMoves(std::ifstream & inputFile);
 
 	Game();
 	Game(std::string fileName);

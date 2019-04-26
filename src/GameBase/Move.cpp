@@ -1,4 +1,5 @@
 #include "Move.h"
+#include <iostream>
 
 typedef enum {
     MoveState_FirstPositon1, 
@@ -13,7 +14,7 @@ typedef enum {
     MoveState_Error
 } MoveFsmStates_t;
 
-Move::Move(FigureType_t figureType, Position & to)
+Move::Move(FigureType_t figureType, const Position & to)
 {
     FigureType = figureType;
     To = Position(to);
@@ -157,6 +158,7 @@ Move::Move(std::string & inputMove)
             {
                 fsmState = MoveState_Error;
             }
+            break;
         case MoveState_SecondPosition2:
             if (currentChar >= '1' && currentChar <= '8')
             {
@@ -221,18 +223,19 @@ Move::Move(std::string & inputMove)
     /**
      * Check if state is in final states of FSM
     */
+    bool isFinal = false;
     for (size_t i = 0; i < sizeof(FinalStates)/sizeof(MoveFsmStates_t); i++)
     {
         if(fsmState == FinalStates[i])
         {
+            isFinal = true;
             break;
         }
-        fsmState = MoveState_Error;
     }
     /**
      * Set error if FSM is in error state
     */
-    if(fsmState == MoveState_Error)
+    if(fsmState == MoveState_Error || !isFinal)
     {
         this->ValidMove = false;
     }

@@ -2,6 +2,7 @@
 
 #define __KING_H
 
+#include "../Enums.h"
 #include "../FigureBase.h"
 #include "../Move.h"
 

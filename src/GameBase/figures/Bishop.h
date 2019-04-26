@@ -2,6 +2,7 @@
 
 #define __BISHOP_H
 
+#include "../Enums.h"
 #include "../FigureBase.h"
 #include "../Move.h"
 

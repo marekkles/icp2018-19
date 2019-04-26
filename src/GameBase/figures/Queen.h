@@ -1,8 +1,8 @@
 #ifndef __QUEEN_H
 
 #define __QUEEN_H
-#include "../FigureBase.h"
 
+#include "../Enums.h"
 #include "../FigureBase.h"
 #include "../Move.h"
 

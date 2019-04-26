@@ -7,61 +7,67 @@
 #include "figures/Queen.h"
 #include "figures/Rook.h"
 
-void FigureFactory::CreateFigure(FigureType_t type, FigureColor_t color, Position & initialPosition, Game * game)
+#include <algorithm>
+
+FigureBase * FigureFactory::CreateFigure(FigureType_t type, FigureColor_t color, Position & initialPosition, Game * game)
 {
+    FigureBase * newFigure;
     switch (type)
     {
     case KING:
-        this->Figures.push_back(King(type, color, initialPosition, game));
+        newFigure = new King(type, color, initialPosition, game);
         break;
     case QUEEN:
-        this->Figures.push_back(Queen(type, color, initialPosition, game));
+        newFigure = new Queen(type, color, initialPosition, game);
         break;
     case ROOK:
-        this->Figures.push_back(Rook(type, color, initialPosition, game));
+        newFigure = new Rook(type, color, initialPosition, game);
         break;
     case KNIGHT:
-        this->Figures.push_back(Knight(type, color, initialPosition, game));
+        newFigure = new Knight(type, color, initialPosition, game);
         break;
     case BISHOP:
-        this->Figures.push_back(Bishop(type, color, initialPosition, game));
+        newFigure = new Bishop(type, color, initialPosition, game);
         break;
     case PAWN:
-        this->Figures.push_back(Pawn(type, color, initialPosition, game));
+        newFigure = new Pawn(type, color, initialPosition, game);
         break;
     default:
+        return NULL;
         break;
     }
+    Figures.push_back(newFigure);
+    return newFigure;
 }
-void FigureFactory::DeleteFigure(FigureBase & figure)
+void FigureFactory::DeleteFigure(FigureBase * figure)
 {
-    std::vector<FigureBase>::iterator iterator = std::find(this->Figures.begin(), this->Figures.end(), figure);
-    this->Figures.erase(iterator);
+    Figures.remove(figure);
+    delete figure;
 }
-FigureBase & FigureFactory::GetKing(FigureColor_t color)
+FigureBase * FigureFactory::GetKing(FigureColor_t color)
 {
-    for (auto &figure : this->Figures)
+    for (auto &figure : Figures)
     {
-        if(figure.InGame && figure.GetColor() == color && figure.GetType == KING)
+        if(figure->InGame && figure->GetColor() == color && figure->GetType() == KING)
             return figure;
     }
 }
-FigureBase & FigureFactory::FigureAtPosition(Position & position)
+FigureBase * FigureFactory::FigureAtPosition(Position & position)
 {
-    for (auto &figure : this->Figures)
+    for (auto &figure : Figures)
     {
-        if(figure.InGame && figure.GetPosition() == position)
+        if(figure->InGame && figure->GetPosition() == position)
             return figure;
     }
-    return this->Figures.at(0);
+    return NULL;
 }
 
 FigureType_t FigureFactory::FigureTypeAtPosition(Position & position)
 {
-    for (auto &figure : this->Figures)
+    for (auto &figure : Figures)
     {
-        if(figure.InGame && figure.GetPosition() == position)
-            return figure.GetType;
+        if(figure->InGame && figure->GetPosition() == position)
+            return figure->GetType();
     }
     return NONE;
 }
@@ -69,15 +75,27 @@ FigureType_t FigureFactory::FigureTypeAtPosition(Position & position)
 
 FigureColor_t FigureFactory::FigureColorAtPosition(Position & position)
 {
-    for (auto &figure : this->Figures)
+    for (auto &figure : Figures)
     {
-        if(figure.InGame && figure.GetPosition() == position)
-            return figure.GetColor;
+        if(figure->InGame && position == figure->GetPosition())
+            return figure->GetColor();
     }
     return NO_COLOR;
 }
 
-FigureFactory::FigureFactory(Game * game)
+FigureBase * FigureFactory::ChangeFigureTo(FigureBase * figure, FigureType_t figureType)
 {
-    this->_game = game;
+    Position figurePosition = Position(figure->GetPosition());
+    FigureColor_t figureColor = figure->GetColor();
+    Game * game = figure->GetGame();
+    DeleteFigure(figure);
+    return CreateFigure(figureType, figureColor, figurePosition, game);
+}
+
+FigureFactory::~FigureFactory() 
+{
+    for (auto &figure : Figures)
+    {
+        delete figure;
+    }
 }

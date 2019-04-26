@@ -1,24 +1,27 @@
 #ifndef __FIGURE_FACTORY_H
 
 #define __FIGURE_FACTORY_H
-#include <vector>
+#include <list>
 
+#include "ClassDeclarations.h"
+#include "Enums.h"
 #include "FigureBase.h"
 #include "Game.h"
 
+class Game;
+
 class FigureFactory {
 private:
-	Game * _game;
 public:
-	std::vector<FigureBase> Figures;
-    void CreateFigure(FigureType_t type, FigureColor_t color, Position & initialPosition, Game * game);
-	FigureBase & FigureAtPosition(Position & position);
-	FigureBase & GetKing(FigureColor_t color);
+	std::list<FigureBase *> Figures;
+    FigureBase * CreateFigure(FigureType_t type, FigureColor_t color, Position & initialPosition, Game * game);
+	FigureBase * FigureAtPosition(Position & position);
+	FigureBase * GetKing(FigureColor_t color);
 	FigureType_t FigureTypeAtPosition(Position & position);
 	FigureColor_t FigureColorAtPosition(Position & position);
-	void DeleteFigure(FigureBase & figure);
-	FigureFactory();
-	FigureFactory(Game * game);
+	void DeleteFigure(FigureBase * figure);
+	FigureBase * ChangeFigureTo(FigureBase * figure, FigureType_t figureType);
+	FigureFactory() = default;
 	~FigureFactory();
 };
 

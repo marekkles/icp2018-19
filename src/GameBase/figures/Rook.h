@@ -1,8 +1,8 @@
 #ifndef __ROOK_H
 
 #define __ROOK_H
-#include "../FigureBase.h"
 
+#include "../Enums.h"
 #include "../FigureBase.h"
 #include "../Move.h"
 
