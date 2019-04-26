@@ -13,7 +13,7 @@ public:
     bool operator!=(const Position & op1) const;
     char rowToChar() const;
     char coulumnToChar() const;
-    void Update(Position & position);
+    void Update(const Position & position);
     ~Position() = default;
     int Row;
     int Coulumn;

@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.src": "c",
         "cmath": "cpp",
         "cstddef": "cpp",
         "cstdint": "cpp",
@@ -37,6 +38,17 @@
         "xutility": "cpp",
         "list": "cpp",
         "vector": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "cwctype": "cpp",
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "optional": "cpp",
+        "sstream": "cpp",
+        "string_view": "cpp"
     }
 }

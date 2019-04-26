@@ -3,59 +3,46 @@
 
 bool Bishop::VerifyMove(Move & move)
 {
-    Position targetPosition = move.To;
-    Position figurePosition = Position(GetPosition());
-    if(move.FigureType != _type  && move.FigureType != NONE)
+    _game->BitfieldSet(this);
+    if(
+        !move.ValidMove ||
+        !_game->BitfieldGet(move.To) ||
+        move.ChangeTo ||
+        move.FigureType != _type ||
+        (move.UseFrom && move.From != _position) ||
+        (move.Take && _game->GetFigureAt(move.To) == NULL)
+        )
         return false;
-    if(!move.ValidMove)
-        return false;
-    if(move.UseFrom && move.From != figurePosition)
-        return false;
-    if(targetPosition == figurePosition)
-        return false;
-    if(abs(targetPosition.Coulumn - figurePosition.Coulumn) != abs(targetPosition.Row - figurePosition.Row))
-        return false;
-    if(move.Take == true && _game->GetFigureColorAt(targetPosition) != GetOpositeColor())
-        return false;
-    if(move.ChangeTo == true)
-        return false;
-    Position positionToTest = Position(GetPosition());
-    /**
-     * +-+-+-+-+-+-+-+-+
-     * | | | | | | | |*|
-     * +-+-+-+-+-+-+-+-+
-     * |*| | | | | |*| |
-     * +-+-+-+-+-+-+-+-+
-     * | |*| | | |*| | |
-     * +-+-+-+-+-+-+-+-+
-     * | | |*| |*| | | |
-     * +-+-+-+-+-+-+-+-+
-     * | | | |B| | | | |
-     * +-+-+-+-+-+-+-+-+
-     * | | |*| |*| | | |
-     * +-+-+-+-+-+-+-+-+
-     * | |*| | | |*| | |
-     * +-+-+-+-+-+-+-+-+
-     * |*| | | | | |*| |
-     * +-+-+-+-+-+-+-+-+
-    */
-    int testDirections[2][8] = {
+    return true;
+}
+
+void Bishop::LoadValidMoves()
+{
+    _game->BitfieldClear();
+    Position positionToTest = Position(_position);
+    int testDirections[2][4] = {
         {1,  1, -1, -1},
         {1, -1, -1,  1}};
     for(int i = 0 ; i < sizeof(testDirections)/2/sizeof(int); i++)
     {
-        positionToTest.Update(figurePosition);
+        positionToTest.Update(_position);
         for (int j = 0; j < 8; j++)
         {
             positionToTest.Coulumn += testDirections[0][i];
             positionToTest.Row += testDirections[1][i];
-            if (positionToTest == targetPosition && 
-                (_game->GetFigureColorAt(positionToTest) == GetOpositeColor() ||
-                _game->GetFigureColorAt(positionToTest) == NO_COLOR))
-                return true;
-            else if(_game->GetFigureColorAt(positionToTest) != NO_COLOR)
+            if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
+            {
+                _game->BitfieldSet(positionToTest);
                 break;
+            }
+            else if (_game->GetFigureColorAt(positionToTest) == NO_COLOR)
+            {
+                _game->BitfieldSet(positionToTest);
+            }
+            else
+            {
+                break;
+            }
         }
     }
-    return false;
 }

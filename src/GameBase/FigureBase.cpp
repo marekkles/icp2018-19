@@ -37,6 +37,11 @@ FigureBase::FigureBase(FigureType_t figureType, FigureColor_t figureColor, Posit
     this->_type = figureType;
 }
 
+void FigureBase::SetPosition(const Position & position)
+{
+    _position.Update(position);
+}
+
 FigureType_t FigureBase::GetType() const
 {
     return this->_type;
@@ -64,6 +69,11 @@ Game * FigureBase::GetGame() const
 void FigureBase::ForceMove(Move & move)
 {
     _position.Update(move.To);
+}
+
+void FigureBase::ForceMove(Position & to)
+{
+    _position.Update(to);
 }
 
 bool FigureBase::TryMove(Move & move)

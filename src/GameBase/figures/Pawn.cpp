@@ -3,52 +3,39 @@
 
 bool Pawn::VerifyMove(Move & move)
 {
-    Position targetPosition = move.To;
-    Position figurePosition = Position(GetPosition());
-    if(move.FigureType != _type  && move.FigureType != NONE)
+    _game->BitfieldSet(this);
+    if(
+        !move.ValidMove ||
+        !_game->BitfieldGet(move.To) ||
+        move.FigureType != _type ||
+        (move.UseFrom && move.From != _position) ||
+        (move.Take && _game->GetFigureAt(move.To) == NULL)
+        )
         return false;
-    if(!move.ValidMove)
-        return false;
-    if(move.FigureType != GetType())
-        return false;
-    if(move.UseFrom && move.From != figurePosition)
-        return false;
-    if(targetPosition == figurePosition)
-        return false;
-    if((targetPosition.Row - figurePosition.Row > 2 && GetColor() == WHITE) ||
-        (targetPosition.Row - figurePosition.Row < -2 && GetColor() == BLACK) ||
-        abs(targetPosition.Coulumn - figurePosition.Coulumn) > 1)
-        return false;
-    if(abs(targetPosition.Row - figurePosition.Row) == 2 &&
-        ((GetColor() == WHITE && figurePosition.Row != 2)||
-        (GetColor() == BLACK && figurePosition.Row != 7)))
-        return false;
-    if(move.ChangeTo == true && 
-        ((targetPosition.Row != 8 && GetColor() == WHITE) || 
-        (targetPosition.Row != 1 && GetColor() == BLACK)))
-        return false;
-    if(abs(targetPosition.Coulumn - figurePosition.Coulumn) == 1 && 
-        _game->GetFigureColorAt(targetPosition) == NO_COLOR)
-        return false;
-    if(abs(targetPosition.Row - figurePosition.Row == 2))
+    return true;
+}
+
+void Pawn::LoadValidMoves()
+{
+    _game->BitfieldClear();
+    int directionSign = (_color == WHITE)?1:-1;
+    int startingRow = (_color == WHITE)?2:7;
+    Position positionToTest = Position(_position);
+    positionToTest.Row += directionSign;
+    if(_game->GetFigureColorAt(positionToTest) != NO_COLOR)
     {
-        Position temporatyPosition = Position(figurePosition);
-        if(GetColor() == WHITE)
-        {
-            temporatyPosition.Row++;
-            if(_game->GetFigureColorAt(temporatyPosition) != NO_COLOR)
-                return false;
-        }
-        else
-        {
-            temporatyPosition.Row--;
-            if(_game->GetFigureColorAt(temporatyPosition) != NO_COLOR)
-                return false;
-        }
+        positionToTest.Coulumn++;
+        if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
+            _game->BitfieldSet(positionToTest);
+        positionToTest.Coulumn -= 2;
+        if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
+            _game->BitfieldSet(positionToTest);
     }
-    if((move.Take == true && 
-        _game->GetFigureColorAt(targetPosition) == GetOpositeColor()) || 
-        _game->GetFigureColorAt(targetPosition) == NO_COLOR)
-        return true;
-    return false;
+    else
+    {
+        _game->BitfieldSet(positionToTest);
+        positionToTest.Row += directionSign;
+        if(_game->GetFigureColorAt(positionToTest) == NO_COLOR && _position.Row == startingRow)
+            _game->BitfieldSet(positionToTest);
+    }
 }

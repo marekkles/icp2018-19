@@ -24,7 +24,7 @@ char Position::coulumnToChar() const
     return Coulumn - 1 + 'a';
 }
 
-void  Position::Update(Position & position){
+void  Position::Update(const Position & position){
     this->Row = position.Row;
     this->Coulumn = position.Coulumn;
 }

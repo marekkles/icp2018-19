@@ -1,5 +1,57 @@
 #include "Game.h"
 
+bool Game::_loadLine(std::ifstream & inputFile, int lineNumber)
+{
+    std::string inputLine;
+    std::getline(inputFile, inputLine);
+    std::istringstream stringStream(inputLine);
+    std::string lineNumberString;
+    std::string firstMoveString;
+    std::string secondMoveString;
+    stringStream >> lineNumber;
+    stringStream >> firstMoveString;
+    stringStream >> secondMoveString;
+}
+
+void Game::BitfieldSet(FigureBase * figure)
+{
+    figure->LoadValidMoves();
+}
+
+void Game::BitfieldSet(Position & position)
+{
+    BitfieldSet(position.Row, position.Coulumn);
+}
+
+void Game::BitfieldSet(int row, int coulumn)
+{
+    if(row < 1 || row > 8 || coulumn < 1 || coulumn > 8)
+        return;
+    ValidMovesBitfield[row-1][coulumn-1] = true;
+}
+
+bool Game::BitfieldGet(Position & position)
+{
+    return BitfieldGet(position.Row, position.Coulumn);
+}
+
+bool Game::BitfieldGet(int row, int coulumn)
+{
+    if(row < 1 || row > 8 || coulumn < 1 || coulumn > 8)
+        return false;
+    return ValidMovesBitfield[row-1][coulumn-1];
+}
+void Game::BitfieldClear()
+{
+    for (size_t i = 0; i < 8; i++)
+    {
+        for (size_t j = 0; j < 8; j++)
+        {
+            ValidMovesBitfield[i][j] = false;
+        }
+    }
+}
+
 void Game::_generateFigures()
 {
     int addRow;
@@ -32,13 +84,6 @@ void Game::_generateFigures()
     }
 }
 
-void Game::_loadDoList()
-{
-    /**
-     * TODO
-    */
-}
-
 bool Game::_isCheck()
 {
     FigureColor_t colorToCheck = (PlayerTurn == WHITE)?BLACK:WHITE;
@@ -51,31 +96,60 @@ bool Game::_isCheck()
     return false;
 }
 
+void Game::_undoMove(Move & move)
+{
+    FigureBase * currentFigure = _figureFactory->FigureAtPosition(move.To);
+    Move reverseMove = Move(move);
+    reverseMove.To = move.From;
+    reverseMove.From = move.To;
+    reverseMove.Take = move.Take;
+    if (reverseMove.Take)
+        _figureFactory->FigureAtPosition(reverseMove.From)->InGame = true;
+    currentFigure->ForceMove(reverseMove);
+    if(move.ChangeTo != NONE)
+        _figureFactory->ChangeFigureTo(currentFigure, move.FigureType);
+}
+
 bool Game::_checkMove(Move & move)
 {
     int numberOfPositives = 0;
     for (auto &figure : _figureFactory->Figures)
     {
-        if(PlayerTurn == figure->GetColor() && figure->VerifyMove(move))
+        if(PlayerTurn == figure->GetColor() && 
+            figure->GetType() == move.FigureType && 
+            figure->VerifyMove(move))
             numberOfPositives++;
     }
     return numberOfPositives == 1;
 }
 bool Game::_tryMove(Move & move)
 {
-    if(!_checkMove(move))
-        return false;
+    FigureBase * lastValidFigure = NULL;
+    int numberOfPositives = 0;
     for (auto &figure : _figureFactory->Figures)
     {
-        if(PlayerTurn == figure->GetColor()) 
-            figure->TryMove(move);
+        if(PlayerTurn == figure->GetColor() && 
+            figure->GetType() == move.FigureType &&
+            figure->VerifyMove(move))
+        {
+            numberOfPositives++;
+            lastValidFigure = figure;
+        }
     }
+    if(numberOfPositives != 1)
+        return false;
+    move.From = Position(lastValidFigure->GetPosition());
+    lastValidFigure->TryMove(move);
+    if(move.ChangeTo != NONE)
+        _figureFactory->ChangeFigureTo(lastValidFigure, move.ChangeTo);
+    if(move.Take)
+        _figureFactory->FigureAtPosition(move.To)->InGame = false;
     return true;
 }
 
-void Game::_forceMove(FigureBase & figure,Move & move)
+void Game::_forceMove(FigureBase * figure,Move & move)
 {
-    figure.ForceMove(move);
+    figure->ForceMove(move);
 }
 
 FigureColor_t Game::GetFigureColorAt(Position & position)
@@ -88,12 +162,18 @@ FigureType_t Game::GetFigureTypeAt(Position & position)
     return _figureFactory->FigureTypeAtPosition(position);
 }
 
+FigureBase * Game::GetFigureAt(Position & position)
+{
+    return _figureFactory->FigureAtPosition(position);
+}
+
 bool Game::NextMove()
 {
     if(DoMoves.empty())
         return false;
-    UndoMoves.push_back(DoMoves.back());
-    DoMoves.pop_back();
+    UndoMoves.push_back(DoMoves.front());
+    DoMoves.pop_front();
+    return _tryMove(UndoMoves.back());
 }
 
 void Game::PreviousMove()
@@ -102,6 +182,7 @@ void Game::PreviousMove()
         return;
     DoMoves.push_back(UndoMoves.back());
     UndoMoves.pop_back();
+    _undoMove(DoMoves.back());
 }
 
 bool Game::UserMove(Move & move)
@@ -111,7 +192,6 @@ bool Game::UserMove(Move & move)
     NextMove();
 }
 
-
 bool Game::LoadMoves(std::ifstream & inputFile)
 {
     std::string inputLine;
@@ -120,78 +200,10 @@ bool Game::LoadMoves(std::ifstream & inputFile)
     std::string secondMove;
     int lineCount = 0;
     enum {NUMBER1, NUMBER2, FIRST_MOVE, SECOND_MOVE, ERROR};
-    while (std::getline(inputFile, inputLine))
+    while (!inputFile.eof())
     {
         lineCount++;
-        number = 0;
-        firstMove.clear();
-        secondMove.clear();
-        int fsmState = NUMBER1;
-        for (int i = 0; i < inputLine.length(); i++)
-        {
-            char currentChar = inputLine[i];
-            switch (fsmState)
-            {
-            case NUMBER1:
-                if (currentChar >= '0' && currentChar <= '9')
-                {
-                    number = number*10 + (currentChar-'0');
-                }
-                else if(currentChar == '.')
-                {
-                    fsmState = NUMBER2;
-                }
-                else
-                {
-                    fsmState = ERROR;
-                }
-                break;
-            case NUMBER2:
-                if(currentChar == ' ')
-                {
-                    fsmState = FIRST_MOVE;
-                }
-                else
-                {
-                    fsmState = ERROR;
-                }
-                break;
-            case FIRST_MOVE:
-                if(currentChar == ' ')
-                {
-                    fsmState = SECOND_MOVE;
-                }
-                else
-                {
-                    firstMove.push_back(currentChar);
-                    fsmState = FIRST_MOVE;
-                }
-                break;
-            case SECOND_MOVE:
-                secondMove.push_back(currentChar);
-                break;
-            default:
-                break;
-            }
-        }
-        if(fsmState == NUMBER1 || fsmState == NUMBER2 || fsmState == ERROR)
-            return false;
-        if(fsmState == FIRST_MOVE && inputFile.eof() == false)
-            return false;
-        if(lineCount != number)
-            return false;
-        Move move = Move(firstMove);
-        if(!move.ValidMove)
-            return false;
-
-        DoMoves.push_back(move);
-        if(fsmState == FIRST_MOVE)
-            return true;
-
-        move = Move(secondMove);
-        if(!move.ValidMove)
-            return false;
-        DoMoves.push_back(move);
+        _loadLine(inputFile, lineCount);
     }
     return true;
 }
@@ -207,6 +219,7 @@ Game::Game()
 	Check = false;
     _generateFigures();
 }
+
 Game::Game(std::string fileName)
 {
     _figureFactory = new FigureFactory();
@@ -218,6 +231,7 @@ Game::Game(std::string fileName)
 	Check = false;
     _generateFigures();
 }
+
 Game::~Game()
 {
     delete _figureFactory;

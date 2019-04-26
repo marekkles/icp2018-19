@@ -10,7 +10,8 @@ class Pawn : public FigureBase
 {
 public:
     using FigureBase::FigureBase;
-    virtual bool VerifyMove(Move & move); 
+    virtual bool VerifyMove(Move & move);
+    virtual void LoadValidMoves();
 	virtual ~Pawn() = default;
 };
 

@@ -1,23 +1,35 @@
 #include "King.h"
+
+#include <iostream>
 #include <stdlib.h>
 
 bool King::VerifyMove(Move & move)
 {
-    Position targetPosition = move.To;
-    Position figurePosition = Position(GetPosition());
-    if(move.FigureType != _type  && move.FigureType != NONE)
+    _game->BitfieldSet(this);
+    if(
+        !move.ValidMove ||
+        !_game->BitfieldGet(move.To) ||
+        move.ChangeTo ||
+        move.FigureType != _type ||
+        (move.UseFrom && move.From != _position) ||
+        (move.Take && _game->GetFigureAt(move.To) == NULL)
+        )
         return false;
-    if(!move.ValidMove)
-        return false;
-    if(move.UseFrom && move.From != figurePosition)
-        return false;
-    if(targetPosition == figurePosition)
-        return false;
-    if(abs(targetPosition.Coulumn - figurePosition.Coulumn) > 1 ||  abs(targetPosition.Row - figurePosition.Row) > 1)
-        return false;
-    if(move.ChangeTo == true)
-        return false;
-    if(move.Take == true && (_game->GetFigureColorAt(targetPosition) == GetOpositeColor() || _game->GetFigureColorAt(targetPosition) == NO_COLOR))
-        return true;
-    return false;
+    return true;
+}
+
+void King::LoadValidMoves()
+{
+    _game->BitfieldClear();
+    Position positionToTest = Position(_position);
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            positionToTest.Row = _position.Row + i;
+            positionToTest.Coulumn = _position.Coulumn + j;
+            if(positionToTest != _position && _game->GetFigureColorAt(positionToTest) != _color)
+                _game->BitfieldSet(positionToTest);
+        }
+    }
 }
