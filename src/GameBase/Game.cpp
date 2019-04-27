@@ -2,20 +2,79 @@
 
 bool Game::_loadLine(std::ifstream & inputFile, int lineNumber)
 {
+    int inputOrder = 0;
+    int state = 0;
     std::string inputLine;
+    std::string move1;
+    std::string move2;
+    inputLine.clear();
+    move1.clear();
+    move2.clear();
     std::getline(inputFile, inputLine);
-    std::istringstream stringStream(inputLine);
-    std::string lineNumberString;
-    std::string firstMoveString;
-    std::string secondMoveString;
-    stringStream >> lineNumber;
-    stringStream >> firstMoveString;
-    stringStream >> secondMoveString;
+    for (size_t i = 0; i < inputLine.length(); i++)
+    {
+        char currentChar = inputLine[i];
+        switch (state)
+        {
+        case 0:
+            if(currentChar >= '0' && currentChar >= '0' )
+                inputOrder = inputOrder*10 + (currentChar - '0');
+            else if(currentChar == '.')
+                state++;
+            else
+                state = -1;
+            break;
+        case 1:
+            if(currentChar == ' ')
+                state++;
+            else
+                state = -1;
+            break;
+        case 2:
+            if(currentChar == ' ')
+                state++;
+            else
+                move1.push_back(currentChar);
+            break;
+        case 3:
+            if(currentChar == ' ')
+                state = -1;
+            else
+                move2.push_back(currentChar);
+            break;        
+        default:
+            break;
+        }
+    }
+    if (inputOrder != lineNumber)
+        return false;
+    if (state <= 1 || (state <= 2 && !inputFile.eof()))
+        return false;
+    DoMoves.push_back(Move(move1));
+    if(state != 2)
+        DoMoves.push_back(Move(move2));
+    return true;
+}
+
+
+void Game::_saveLine(std::ostream & outputFile, int lineNumber, Move & move1, Move & move2)
+{
+    outputFile << lineNumber << ". ";
+    move1.SaveMove(outputFile);
+    outputFile << " ";
+    move2.SaveMove(outputFile);
+    outputFile << " \n";
+}
+void Game::_saveLine(std::ostream & outputFile, int lineNumber, Move & move1)
+{
+    outputFile << lineNumber << ". ";
+    move1.SaveMove(outputFile);
+    outputFile << " \n";
 }
 
 void Game::BitfieldSet(FigureBase * figure)
 {
-    figure->LoadValidMoves();
+    figure->LoadValidMoves(true);
 }
 
 void Game::BitfieldSet(Position & position)
@@ -30,7 +89,7 @@ void Game::BitfieldSet(int row, int coulumn)
     ValidMovesBitfield[row-1][coulumn-1] = true;
 }
 
-bool Game::BitfieldGet(Position & position)
+bool Game::BitfieldGet(const Position & position)
 {
     return BitfieldGet(position.Row, position.Coulumn);
 }
@@ -52,10 +111,19 @@ void Game::BitfieldClear()
     }
 }
 
+void Game::_copyBitfield(bool destination[8][8])
+{
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            destination[i][j] = ValidMovesBitfield[i][j];
+        }
+    }
+}
+
 void Game::_generateFigures()
 {
-    int addRow;
-    int addCoulumn;
     FigureColor_t colorToCreate;
     Position initialPosition = Position('1','a');
     for (int i = 0; i < 2; i++)
@@ -84,72 +152,153 @@ void Game::_generateFigures()
     }
 }
 
+bool Game::_isCheckForAllMovesOfFigure(FigureBase * figure)
+{
+    Position oldFigurePosition = Position(figure->GetPosition());
+    Position newFigurePosition = Position(figure->GetPosition());
+    bool bitfield[8][8];
+    bool isCheck = true;
+
+    figure->LoadValidMoves(true);
+    _copyBitfield(bitfield);
+
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            if(!bitfield[i][j])
+                continue;
+            newFigurePosition.Row = i + 1;
+            newFigurePosition.Coulumn = j + 1;
+
+            FigureBase * figureToTake = _figureFactory->FigureAtPosition(newFigurePosition);
+            
+            if(figureToTake != NULL)
+                figureToTake->TakenAtTurnNumber = -1;
+            
+            figure->SetPosition(newFigurePosition);
+
+            isCheck = _isCheck() && isCheck;
+
+            if(figureToTake != NULL)
+                figureToTake->TakenAtTurnNumber = 0;
+            if(!isCheck)
+                break;
+        }
+    }
+    figure->SetPosition(oldFigurePosition);
+    return isCheck;
+}
+
+bool Game::_isCheckmate()
+{
+    bool isCheckmate = true;
+    for (auto &figure : _figureFactory->Figures)
+    {
+        if(PlayerTurn == figure->GetOpositeColor() && figure->TakenAtTurnNumber == 0)
+        {
+            isCheckmate = isCheckmate && _isCheckForAllMovesOfFigure(figure);
+        }
+    }
+    return isCheckmate;
+}
+
 bool Game::_isCheck()
 {
     FigureColor_t colorToCheck = (PlayerTurn == WHITE)?BLACK:WHITE;
-    Move checkMove = Move(NONE, _figureFactory->GetKing(colorToCheck)->GetPosition());
+    FigureBase * king = _figureFactory->GetKing(colorToCheck);
+    if(king == NULL)
+        return true;
+    BitfieldClear();
     for (auto &figure : _figureFactory->Figures)
     {
-        if(PlayerTurn == figure->GetColor() && figure->VerifyMove(checkMove))
-            return true;
+        if(PlayerTurn == figure->GetColor() && figure->TakenAtTurnNumber == 0)
+            figure->LoadValidMoves(false);
     }
+    if(BitfieldGet(king->GetPosition()))
+        return true;
     return false;
 }
 
 void Game::_undoMove(Move & move)
 {
-    FigureBase * currentFigure = _figureFactory->FigureAtPosition(move.To);
-    Move reverseMove = Move(move);
-    reverseMove.To = move.From;
-    reverseMove.From = move.To;
-    reverseMove.Take = move.Take;
-    if (reverseMove.Take)
-        _figureFactory->FigureAtPosition(reverseMove.From)->InGame = true;
-    currentFigure->ForceMove(reverseMove);
+    FigureBase * figure = _figureFactory->FigureAtPosition(move.To);
     if(move.ChangeTo != NONE)
-        _figureFactory->ChangeFigureTo(currentFigure, move.FigureType);
+        figure = _figureFactory->ChangeFigureTo(figure, move.FigureType);
+    if(move.Take)
+        _figureFactory->UnTakeFigure(move.To, TurnCounter);
+    figure->SetPosition(move.From);
 }
 
-bool Game::_checkMove(Move & move)
+bool Game::_doMove(Move & move)
 {
-    int numberOfPositives = 0;
-    for (auto &figure : _figureFactory->Figures)
-    {
-        if(PlayerTurn == figure->GetColor() && 
-            figure->GetType() == move.FigureType && 
-            figure->VerifyMove(move))
-            numberOfPositives++;
-    }
-    return numberOfPositives == 1;
-}
-bool Game::_tryMove(Move & move)
-{
-    FigureBase * lastValidFigure = NULL;
-    int numberOfPositives = 0;
-    for (auto &figure : _figureFactory->Figures)
-    {
-        if(PlayerTurn == figure->GetColor() && 
-            figure->GetType() == move.FigureType &&
-            figure->VerifyMove(move))
-        {
-            numberOfPositives++;
-            lastValidFigure = figure;
-        }
-    }
-    if(numberOfPositives != 1)
+    if(!move.ValidMove)
         return false;
-    move.From = Position(lastValidFigure->GetPosition());
-    lastValidFigure->TryMove(move);
+    FigureBase * figure = _figureThatCanDoMove(move);
+    if(figure == NULL)
+    {
+        move.ValidMove = false;
+        return false;
+    }
+    FigureBase * takenFigure = GetFigureAt(move.To);
+    if(takenFigure != NULL)
+        _figureFactory->TakeFigure(takenFigure, TurnCounter);
+    
+    move.From = Position(figure->GetPosition());
+    figure->SetPosition(move.To);
     if(move.ChangeTo != NONE)
-        _figureFactory->ChangeFigureTo(lastValidFigure, move.ChangeTo);
-    if(move.Take)
-        _figureFactory->FigureAtPosition(move.To)->InGame = false;
+        figure = _figureFactory->ChangeFigureTo(figure, move.ChangeTo);
+    
+
+    bool didTake = takenFigure != NULL;
+    bool didCheckmate = _isCheckmate();
+    bool didCheck = false;
+    if(!didCheckmate)
+        didCheck = _isCheck();
+    if((move.Take && !didTake) || (move.Check && !didCheck) || (move.Checkmate && !didCheckmate))
+    {
+        _undoMove(move);
+        return false;
+    }
+
+    move.Take = didTake;
+    move.Checkmate = didCheckmate;
+    move.Check = didCheck;
+
+    if(move.Checkmate)
+        Check = true;
+    if(move.Check)
+    {
+        GameEnd = true;
+        Winner = PlayerTurn;
+    }
     return true;
 }
 
-void Game::_forceMove(FigureBase * figure,Move & move)
+FigureBase * Game::_figureThatCanDoMove(Move & move)
 {
-    figure->ForceMove(move);
+    FigureBase * returnFigure = NULL;
+    for (auto &figure : _figureFactory->Figures)
+    {
+        if(move.FigureType == figure->GetType() && PlayerTurn == figure->GetColor() && figure->TakenAtTurnNumber == 0 && figure->VerifyMove(move))
+        {
+            if(returnFigure == NULL)
+                returnFigure = figure;
+            else
+                return NULL;
+        }
+    }
+    return returnFigure;
+}
+
+void Game::_changeTurn()
+{
+    PlayerTurn = (PlayerTurn == WHITE)?BLACK:WHITE;
+}
+
+void Game::_updateTurnCounter(bool forward)
+{
+    TurnCounter += (forward)?1:-1;
 }
 
 FigureColor_t Game::GetFigureColorAt(Position & position)
@@ -169,43 +318,88 @@ FigureBase * Game::GetFigureAt(Position & position)
 
 bool Game::NextMove()
 {
+    if (GameEnd)
+        return false;
     if(DoMoves.empty())
         return false;
     UndoMoves.push_back(DoMoves.front());
-    DoMoves.pop_front();
-    return _tryMove(UndoMoves.back());
+    
+    bool moveResult = _doMove(UndoMoves.back());
+    if(moveResult)
+    {
+        _changeTurn();
+        _updateTurnCounter(true);
+        DoMoves.pop_front();
+    }
+    else
+    {
+        UndoMoves.pop_back();
+    }
+    return moveResult;
 }
 
 void Game::PreviousMove()
 {
     if(UndoMoves.empty())
         return;
-    DoMoves.push_back(UndoMoves.back());
+    DoMoves.push_front(UndoMoves.back());
     UndoMoves.pop_back();
-    _undoMove(DoMoves.back());
+    _updateTurnCounter(false);
+    _changeTurn();
+    _undoMove(DoMoves.front());
+    Move & currentMove = UndoMoves.back();
+    GameEnd = currentMove.Checkmate;
+    Check = currentMove.Check;
+    if(GameEnd)
+        Winner = PlayerTurn;
+    else
+        Winner = NO_COLOR;
 }
 
 bool Game::UserMove(Move & move)
 {
     DoMoves.clear();
     DoMoves.push_back(move);
-    NextMove();
+    return NextMove();
 }
 
 bool Game::LoadMoves(std::ifstream & inputFile)
 {
+    DoMoves.clear();
     std::string inputLine;
-    int number;
     std::string firstMove;
     std::string secondMove;
     int lineCount = 0;
-    enum {NUMBER1, NUMBER2, FIRST_MOVE, SECOND_MOVE, ERROR};
     while (!inputFile.eof())
     {
         lineCount++;
-        _loadLine(inputFile, lineCount);
+        if(!_loadLine(inputFile, lineCount))
+        {
+            DoMoves.clear();
+            return false;
+        }
     }
     return true;
+}
+
+void Game::SaveMoves(std::ostream & outputFile)
+{
+    int moveCounter = 0;
+    int turnCounter = 0;
+    Move move1;
+    for (auto &move : UndoMoves)
+    {
+        moveCounter++;
+        if((moveCounter % 2) == 1)
+        {
+            turnCounter++;
+            move1 = move;
+        }
+        else
+            _saveLine(outputFile, turnCounter, move1, move);
+        if((moveCounter & 1 ) == 1 && &move == &UndoMoves.back())
+            _saveLine(outputFile, turnCounter, move1);
+    }
 }
 
 Game::Game()
@@ -217,18 +411,7 @@ Game::Game()
 	Winner = NO_COLOR;
 	GameEnd = false;
 	Check = false;
-    _generateFigures();
-}
-
-Game::Game(std::string fileName)
-{
-    _figureFactory = new FigureFactory();
-    _inputFileName = fileName;
-    Figures = & _figureFactory->Figures;
-    PlayerTurn = WHITE;
-	Winner = NO_COLOR;
-	GameEnd = false;
-	Check = false;
+    TurnCounter = 1;
     _generateFigures();
 }
 

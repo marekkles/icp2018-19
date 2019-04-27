@@ -18,9 +18,10 @@ bool King::VerifyMove(Move & move)
     return true;
 }
 
-void King::LoadValidMoves()
+void King::LoadValidMoves(bool writeOver)
 {
-    _game->BitfieldClear();
+    if(writeOver)
+        _game->BitfieldClear();
     Position positionToTest = Position(_position);
     for (int i = -1; i <= 1; i++)
     {

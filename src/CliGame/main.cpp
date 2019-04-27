@@ -4,9 +4,6 @@
 
 #include "../GameBase/Move.h"
 
-static bool opMode = false;
-
-
 char typeToChar(FigureType_t type)
 {
     switch (type)
@@ -68,31 +65,14 @@ void printHelp()
     "  > - next move\n" <<
     "  < - previous move\n" <<
     "  p - print chess board\n" <<
-    "  m - print do moves\n" <<
+    "  m - print done moves\n" <<
+    "  m do - print to do moves\n" <<
     "  ~ POSITION - print hint for figure at position\n" <<
     "  l FILENAME - load from file\n" <<
-    "  q - quit\n" <<
-    "  $ - op (sudo :D ) mode\n" <<
-    "  [K,D,V,S,J][x][a-h1-8]a-h1-8[D,V,S,J][#,+] - do move\n";
+    "  [K,D,V,S,J][x][a-h1-8]a-h1-8[D,V,S,J][#,+] - do move\n" <<
+    "  q - quit\n";
 }
-void printOpHelp()
-{
-    std::cout << 
-    "Help:\n" <<
-    "  ? - help page\n" <<
-    "  > - next move\n" <<
-    "  < - previous move\n" <<
-    "  p - print chess board\n" <<
-    "  m - print do moves\n" <<
-    "  ~ POSITION - print hint for figure at position\n" <<
-    "  l FILENAME - load from file\n" <<
-    "  q - quit\n" <<
-    "  $ - op (sudo :D ) mode\n" <<
-    "  $n [K,D,V,S,J]a-h1-8 - new figure at position\n" <<
-    "  $d a-h1-8 - delete figure at position\n" <<
-    "  $p [a-h1-8] - more info on the chess board or figure at position\n" <<
-    "  [K,D,V,S,J][x][a-h1-8]a-h1-8[D,V,S,J][#,+] - do move\n";
-}
+
 void printValidMoves(Game & game)
 {
     Position currentPosition = Position('8','a');
@@ -129,7 +109,7 @@ void printChessBoard(Game & game)
     {
         currentPosition.Row = i;
         std::cout << "\n  +--+--+--+--+--+--+--+--+\n"<< i << " |";
-        for (int j = 1; j <= 8; j++, currentPosition.Coulumn)
+        for (int j = 1; j <= 8; j++)
         {
             currentPosition.Coulumn = j;
             if(game.GetFigureColorAt(currentPosition) != NO_COLOR)
@@ -144,49 +124,25 @@ void printChessBoard(Game & game)
     std::cout << "\n  +--+--+--+--+--+--+--+--+\n   A  B  C  D   E  F  G  H\n";
 }
 
-void printMove(Move & move)
+void printDoMoves(Game & game)
 {
-    std::cout << 
-    ((move.FigureType == PAWN)?'\0':typeToChar(move.FigureType)) <<
-    ((move.Take)?'x':'\0') <<
-    move.To.coulumnToChar() << move.To.rowToChar() <<
-    ((move.UseFrom)?move.From.coulumnToChar():'\0')<< ((move.UseFrom)?move.From.rowToChar():'\0') <<
-    ((move.ChangeTo != NONE)?typeToChar(move.ChangeTo):'\0') <<
-    ((move.Check)?'+':'\0') <<
-    ((move.Checkmate)?'#':'\0');
-}
-
-void printMoves(Game & game)
-{
-    int turnCounter = 0;
-    bool whitesTurn = true;
-    whitesTurn = true;
-    for (auto &move : game.UndoMoves)
+    for (auto &move : game.DoMoves)
     {
-        if (whitesTurn)
-        {
-            turnCounter++;
-            std::cout  << "\n" << turnCounter << ". ";
-        }
-        whitesTurn = !whitesTurn;
-        printMove(move);
-        std::cout << " ";
+        move.SaveMove(std::cout);
+        std::cout << "\n";
     }
-    std::cout<< "\n";
 }
 
 int parseInput(std::string & input, Game & game)
 {
     if(input == "?")
     {
-        if(opMode == false)
-            printHelp();
-        else
-            printOpHelp();
+        printHelp();
     }
     else if(input == ">")
     {
-        game.NextMove();
+        std::cout << "Turn: " << game.TurnCounter << ". " << ((game.PlayerTurn == WHITE)?"WHITE":"BLACK") << "\n";
+        std::cout << "Move: " << ((game.NextMove())?"TRUE":"FALSE") << "\n";
     }
     else if(input == "<")
     {
@@ -207,17 +163,29 @@ int parseInput(std::string & input, Game & game)
         game.BitfieldSet(figureToTest); 
         printValidMoves(game);
     }
+    else if(input == "m do")
+    {
+        std::cout << "Do moves\n";
+        printDoMoves(game);
+    }
     else if(input == "m")
     {
         std::cout << "Moves\n";
-        printMoves(game);
+        game.SaveMoves(std::cout);
     }
     else if(input[0] == 'l')
     {
         std::ifstream inputFile;
         inputFile.open(&input[2]);
+        if (inputFile.fail())
+        {
+            std::cout << "Error opening file: " << &input[2] << "\n";
+            return 1;
+        }
+        std::cout << "Loading from file: " <<  &input[2] << "\n";
         if(!game.LoadMoves(inputFile))
         {
+            std::cout << "Error parsing file: " << &input[2] << "\n";
             inputFile.close();
             return 1;
         }
@@ -228,44 +196,11 @@ int parseInput(std::string & input, Game & game)
         std::cout << "Quit\n";
         return -1;
     }
-    else if(input == "$")
-    {
-        if(opMode == false)
-        {
-            opMode = true;
-            std::cout << "Now you are in op mode!\n";
-        }
-    }
-    else if (opMode && input == "$n")
-    {
-        /* code */
-    }
-    else if (opMode && input == "$d")
-    {
-        /* code */
-    }
-    else if (opMode && input == "$p")
-    {
-        /* code */
-    }
     else
     {
         Move userMove = Move(input);
-        std::cout << "Move " << ((userMove.ValidMove)?"OK":"BAD") << "\n";
-        if(!userMove.ValidMove)
-            return 0;
-        std::cout <<
-         "Figure: " << typeToChar(userMove.FigureType) <<
-         "\nTo: " << coulumnToChar(userMove.To.Coulumn) << rowToChar(userMove.To.Row);
-        if(userMove.UseFrom)
-            std::cout << "\nFrom: " << coulumnToChar(userMove.From.Coulumn) << rowToChar(userMove.From.Row);
-        std::cout << ((userMove.Take)?"\nTake":"") <<
-        ((userMove.Check)?"\nCheck":"") <<
-        ((userMove.Checkmate)?"\nCheckmate":"");
-        if(userMove.ChangeTo != NONE)
-            std::cout << "\nChange to: " << typeToChar(userMove.ChangeTo);
-        std::cout << "\n";
-        game.UserMove(userMove);
+        std::cout << "Turn: " << game.TurnCounter << ". " << ((game.PlayerTurn == WHITE)?"WHITE":"BLACK") << "\n";
+        std::cout << "Move: " << ((game.UserMove(userMove))?"TRUE":"FALSE") << "\n";
     }
     return 0;
 }
@@ -279,10 +214,7 @@ int main(int argc, char *argv[])
     for (int i = 0;;i++)
     {
         std::string inputString;
-        if(opMode == false)
-            std::cout << ">> ";
-        else
-            std::cout << "$$ ";
+        std::cout << ">> ";
         std::getline(std::cin, inputString);
         if(parseInput(inputString, game) == -1)
             break;

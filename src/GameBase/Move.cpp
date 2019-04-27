@@ -14,6 +14,27 @@ typedef enum {
     MoveState_Error
 } MoveFsmStates_t;
 
+void Move::SaveMove(std::ostream & outputFile)
+{
+    if(FigureType != PAWN && FigureType != NONE)
+        outputFile << FigureTypeToChar(FigureType);
+    
+    if (Take)
+        outputFile << 'x';
+    if(UseFrom)
+        outputFile << ((char)(From.Coulumn - 1 + 'a')) << ((char)(From.Row - 1 + '1')); 
+    
+    outputFile << ((char)(To.Coulumn - 1 + 'a')) << ((char)(To.Row - 1 + '1'));
+
+    if(ChangeTo != KING && ChangeTo != PAWN && ChangeTo != NONE)
+        outputFile << FigureTypeToChar(FigureType);
+    
+    if(Check)
+        outputFile << '+';
+    if(Checkmate)
+        outputFile << '#';
+}
+
 Move::Move(FigureType_t figureType, const Position & to)
 {
     FigureType = figureType;
@@ -39,7 +60,7 @@ Move::Move(std::string & inputMove)
     /**
      * Limiting variable
     */
-    int len = inputMove.length();
+    size_t len = inputMove.length();
     /**
      * Initial values definitions
     */
@@ -65,26 +86,26 @@ Move::Move(std::string & inputMove)
         switch (fsmState)
         {
         case MoveState_FirstPositon1:
-            if (currentChar == 'K' || 
-                currentChar == 'D' || 
+            if (currentChar == 'D' || 
                 currentChar == 'V' || 
+                currentChar == 'K' || 
                 currentChar == 'S' ||
                 currentChar == 'J')
             {
                 fsmState = MoveState_Figure;
-                this->FigureType = FigureCharToFigureType(currentChar);
+                FigureType = FigureTypeCharToType(currentChar);
             }
             else if (currentChar == 'x')
             {
                 fsmState = MoveState_Take;
                 this->Take = true;
-                this->FigureType = FigureCharToFigureType('p');
+                this->FigureType = FigureTypeCharToType('p');
             }
             else if (currentChar >= 'a' && currentChar <= 'h')
             {
                 fsmState = MoveState_FirstPositon2;
                 positionCoulumn = currentChar;
-                this->FigureType = FigureCharToFigureType('p');
+                this->FigureType = FigureTypeCharToType('p');
             }
             else
             {
@@ -152,7 +173,7 @@ Move::Move(std::string & inputMove)
                 currentChar == 'J')
             {
                 fsmState = MoveState_Change;
-                this->ChangeTo = FigureCharToFigureType(currentChar);
+                this->ChangeTo = FigureTypeCharToType(currentChar);;
             }
             else
             {
@@ -190,7 +211,7 @@ Move::Move(std::string & inputMove)
                 currentChar == 'J')
             {
                 fsmState = MoveState_Change;
-                this->ChangeTo = FigureCharToFigureType(currentChar);
+                this->ChangeTo = FigureTypeCharToType(currentChar);
             }
             else
             {

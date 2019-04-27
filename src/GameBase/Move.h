@@ -3,6 +3,8 @@
 #define __MOVE_H
 
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "ClassDeclarations.h"
 #include "Enums.h"
@@ -12,6 +14,7 @@
 class Move
 {
 public:
+    void SaveMove(std::ostream & outputFile);
     Move() = default;
     Move(FigureType_t figureType, const Position & to);
     Move(std::string & inputMove);

@@ -1,36 +1,8 @@
 #include "FigureBase.h"
 
-FigureType_t FigureCharToFigureType(const char figureChar)
-{
-    switch (figureChar)
-    {
-    case 'K':
-        return KING;
-        break;
-    case 'D':
-        return QUEEN;
-        break;
-    case 'V':
-        return ROOK;
-        break;
-    case 'S':
-        return BISHOP;
-        break;
-    case 'J':
-        return KNIGHT;
-        break;
-    case 'p':
-        return PAWN;
-        break;
-    default:
-        return NONE;
-        break;
-    }
-}
-
 FigureBase::FigureBase(FigureType_t figureType, FigureColor_t figureColor, Position & initialPosition, Game * game)
 {
-    this->InGame = true;
+    this->TakenAtTurnNumber = 0;
     this->_game = game;
     this->_color = figureColor;
     this->_position = Position(initialPosition);

@@ -48,15 +48,32 @@ FigureBase * FigureFactory::GetKing(FigureColor_t color)
 {
     for (auto &figure : Figures)
     {
-        if(figure->InGame && figure->GetColor() == color && figure->GetType() == KING)
+        if(figure->TakenAtTurnNumber == 0 && figure->GetColor() == color && figure->GetType() == KING)
             return figure;
     }
+    return NULL;
 }
+
+
+void FigureFactory::TakeFigure(FigureBase * figure, int turnNumber)
+{
+    figure->TakenAtTurnNumber = turnNumber;
+}
+
+void FigureFactory::UnTakeFigure(Position & wasAt, int turnNumber)
+{
+    for (auto &figure : Figures)
+    {
+        if(figure->GetPosition() == wasAt && figure->TakenAtTurnNumber == turnNumber)
+            figure->TakenAtTurnNumber = 0;
+    }
+}
+
 FigureBase * FigureFactory::FigureAtPosition(Position & position)
 {
     for (auto &figure : Figures)
     {
-        if(figure->InGame && figure->GetPosition() == position)
+        if(figure->TakenAtTurnNumber == 0 && figure->GetPosition() == position)
             return figure;
     }
     return NULL;
@@ -66,7 +83,7 @@ FigureType_t FigureFactory::FigureTypeAtPosition(Position & position)
 {
     for (auto &figure : Figures)
     {
-        if(figure->InGame && figure->GetPosition() == position)
+        if(figure->TakenAtTurnNumber == 0 && figure->GetPosition() == position)
             return figure->GetType();
     }
     return NONE;
@@ -77,7 +94,7 @@ FigureColor_t FigureFactory::FigureColorAtPosition(Position & position)
 {
     for (auto &figure : Figures)
     {
-        if(figure->InGame && position == figure->GetPosition())
+        if(figure->TakenAtTurnNumber == 0 && position == figure->GetPosition())
             return figure->GetColor();
     }
     return NO_COLOR;

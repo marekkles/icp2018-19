@@ -15,27 +15,26 @@ bool Pawn::VerifyMove(Move & move)
     return true;
 }
 
-void Pawn::LoadValidMoves()
+void Pawn::LoadValidMoves(bool writeOver)
 {
-    _game->BitfieldClear();
+    if(writeOver)
+        _game->BitfieldClear();
     int directionSign = (_color == WHITE)?1:-1;
     int startingRow = (_color == WHITE)?2:7;
     Position positionToTest = Position(_position);
     positionToTest.Row += directionSign;
-    if(_game->GetFigureColorAt(positionToTest) != NO_COLOR)
-    {
-        positionToTest.Coulumn++;
-        if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
-            _game->BitfieldSet(positionToTest);
-        positionToTest.Coulumn -= 2;
-        if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
-            _game->BitfieldSet(positionToTest);
-    }
-    else
-    {
+    positionToTest.Coulumn++;
+    if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
         _game->BitfieldSet(positionToTest);
-        positionToTest.Row += directionSign;
-        if(_game->GetFigureColorAt(positionToTest) == NO_COLOR && _position.Row == startingRow)
-            _game->BitfieldSet(positionToTest);
-    }
+    positionToTest.Coulumn--;
+    if(_game->GetFigureColorAt(positionToTest) == NO_COLOR)
+        _game->BitfieldSet(positionToTest);
+    positionToTest.Coulumn--;
+    if(_game->GetFigureColorAt(positionToTest) == GetOpositeColor())
+        _game->BitfieldSet(positionToTest);
+    
+    positionToTest.Coulumn++;
+    positionToTest.Row += directionSign;
+    if(_game->GetFigureColorAt(positionToTest) == NO_COLOR && _position.Row == startingRow)
+        _game->BitfieldSet(positionToTest);
 }

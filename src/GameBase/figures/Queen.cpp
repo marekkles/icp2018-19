@@ -15,14 +15,15 @@ bool Queen::VerifyMove(Move & move)
     return true;
 }
 
-void Queen::LoadValidMoves()
+void Queen::LoadValidMoves(bool writeOver)
 {
-    _game->BitfieldClear();
+    if(writeOver)
+        _game->BitfieldClear();
     Position positionToTest = Position(_position);
     int testDirections[2][8] = {
         {0, 1, 1, 1, 0, -1, -1, -1},
         {1, 1, 0, -1, -1, -1, 0, 1}};
-    for(int i = 0 ; i < sizeof(testDirections)/2/sizeof(int); i++)
+    for(size_t i = 0 ; i < sizeof(testDirections)/2/sizeof(int); i++)
     {
         positionToTest.Update(_position);
         for (int j = 0; j < 8; j++)

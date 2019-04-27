@@ -11,7 +11,7 @@ class Knight : public FigureBase
 public:
     using FigureBase::FigureBase;
     virtual bool VerifyMove(Move & move);
-    virtual void LoadValidMoves();
+    virtual void LoadValidMoves(bool writeOver);
 	virtual ~Knight() = default;
 };
 

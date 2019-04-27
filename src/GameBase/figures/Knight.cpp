@@ -16,9 +16,10 @@ bool Knight::VerifyMove(Move & move)
     return true;
 }
 
-void Knight::LoadValidMoves()
+void Knight::LoadValidMoves(bool writeOver)
 {
-    _game->BitfieldClear();
+    if(writeOver)
+        _game->BitfieldClear();
     int positionsToTest[2][8] ={
         {1 , -1, 2,  2, -1,  1, -2, -2},
         {2 ,  2, 1, -1, -2, -2, -1,  1}

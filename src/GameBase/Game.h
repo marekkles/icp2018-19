@@ -22,14 +22,19 @@ private:
 	int _blacksScore;
 	std::string _inputFileName;
 	bool _loadLine(std::ifstream & inputFile, int lineNumber);
+	void _saveLine(std::ostream & outputFile, int lineNumber, Move & move1, Move & move2);
+	void _saveLine(std::ostream & outputFile, int lineNumber, Move & move1);
 	
+	void _copyBitfield(bool destination[8][8]);
 	void _generateFigures();
-	void _loadDoList();
+	bool _isCheckmate();
 	bool _isCheck();
+	bool _isCheckForAllMovesOfFigure(FigureBase * figure);
 	void _undoMove(Move & move);
-	bool _checkMove(Move & move);
-	bool _tryMove(Move & move);
-	void _forceMove(FigureBase * figure,Move & move);
+	bool _doMove(Move & move);
+	FigureBase * _figureThatCanDoMove(Move & move);
+	void _changeTurn();
+	void _updateTurnCounter(bool forward);
 public:
 	bool ValidMovesBitfield[8][8];
 	std::list<Move> DoMoves;
@@ -39,11 +44,12 @@ public:
 	FigureColor_t Winner;
 	bool GameEnd;
 	bool Check;
+	int TurnCounter;
 
 	void BitfieldSet(FigureBase * figure);
 	void BitfieldSet(Position & position);
 	void BitfieldSet(int row, int coulumn);
-	bool BitfieldGet(Position & position);
+	bool BitfieldGet(const Position & position);
 	bool BitfieldGet(int row, int coulumn);
 	void BitfieldClear();
 	FigureColor_t GetFigureColorAt(Position & position);
@@ -53,9 +59,9 @@ public:
 	void PreviousMove();
 	bool UserMove(Move & move);
 	bool LoadMoves(std::ifstream & inputFile);
+	void SaveMoves(std::ostream & outputFile);
 
 	Game();
-	Game(std::string fileName);
 	~Game();
 };
 

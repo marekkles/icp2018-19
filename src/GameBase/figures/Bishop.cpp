@@ -16,14 +16,15 @@ bool Bishop::VerifyMove(Move & move)
     return true;
 }
 
-void Bishop::LoadValidMoves()
+void Bishop::LoadValidMoves(bool writeOver)
 {
-    _game->BitfieldClear();
+    if(writeOver)
+        _game->BitfieldClear();
     Position positionToTest = Position(_position);
     int testDirections[2][4] = {
         {1,  1, -1, -1},
         {1, -1, -1,  1}};
-    for(int i = 0 ; i < sizeof(testDirections)/2/sizeof(int); i++)
+    for(size_t i = 0 ; i < sizeof(testDirections)/2/sizeof(int); i++)
     {
         positionToTest.Update(_position);
         for (int j = 0; j < 8; j++)

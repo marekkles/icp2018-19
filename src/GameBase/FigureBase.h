@@ -9,15 +9,12 @@
 #include "Game.h"
 
 
-
-FigureType_t FigureCharToFigureType(const char figureChar);
-
 class FigureBase
 {
 public:
-	bool InGame;
+	int TakenAtTurnNumber;
 	explicit FigureBase(FigureType_t figureType, FigureColor_t figureColor, Position & initialPosition, Game * game);
-	~FigureBase() = default;
+	virtual ~FigureBase() = default;
 	void SetPosition(const Position & position);
 	FigureType_t GetType() const;
 	const Position & GetPosition() const;
@@ -29,7 +26,7 @@ public:
 	bool TryMove(Move & move);
 	bool operator==(const FigureBase & op1) const;
 	virtual bool VerifyMove(Move & move) = 0;
-	virtual void LoadValidMoves() = 0; 
+	virtual void LoadValidMoves(bool writeOver) = 0; 
 protected:
 	Game * _game;
 	Position _position;
