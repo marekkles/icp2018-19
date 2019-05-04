@@ -347,6 +347,7 @@ void Game::PreviousMove()
     _updateTurnCounter(false);
     _changeTurn();
     _undoMove(DoMoves.front());
+    
     Move & currentMove = UndoMoves.back();
     GameEnd = currentMove.Checkmate;
     Check = currentMove.Check;
@@ -354,6 +355,14 @@ void Game::PreviousMove()
         Winner = PlayerTurn;
     else
         Winner = NO_COLOR;
+}
+
+void Game::FirstMove()
+{
+    while (!UndoMoves.empty())
+    {
+        PreviousMove();
+    }
 }
 
 bool Game::UserMove(Move & move)

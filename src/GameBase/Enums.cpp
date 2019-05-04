@@ -8,12 +8,12 @@ char FigureTypeToChar(FigureType_t figureType)
         return 'K';
     if(figureType == KNIGHT)
         return 'J';
-    if(figureType == PAWN)
-        return 'p';
     if(figureType == QUEEN)
         return 'D';
     if(figureType == ROOK)
         return 'V';
+    if(figureType == PAWN)
+        return 'p';
     return 'n';
 }
 

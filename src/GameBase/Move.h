@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "Language.h"
 #include "ClassDeclarations.h"
 #include "Enums.h"
 #include "Position.h"

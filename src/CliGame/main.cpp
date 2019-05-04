@@ -64,11 +64,13 @@ void printHelp()
     "  ? - help page\n" <<
     "  > - next move\n" <<
     "  < - previous move\n" <<
+    "  << - rewind to begining\n" <<
     "  p - print chess board\n" <<
     "  m - print done moves\n" <<
     "  m do - print to do moves\n" <<
     "  ~ POSITION - print hint for figure at position\n" <<
     "  l FILENAME - load from file\n" <<
+    "  s FILENAME - save to file\n" <<
     "  [K,D,V,S,J][x][a-h1-8]a-h1-8[D,V,S,J][#,+] - do move\n" <<
     "  q - quit\n";
 }
@@ -126,11 +128,28 @@ void printChessBoard(Game & game)
 
 void printDoMoves(Game & game)
 {
+    int moveCounter = game.UndoMoves.size();
+    int turnCounter = (moveCounter+1)/2;
     for (auto &move : game.DoMoves)
-    {
+    {   
+        if(moveCounter % 2 == 0)
+        {
+            turnCounter++;
+            std::cout << "\n" << turnCounter << ". ";
+        }
+        else if (&game.DoMoves.back() == &move && moveCounter % 2 == 0)
+        {
+            std::cout << "\n" << turnCounter << ". ";
+        }
+        else
+        {
+            std::cout << turnCounter << " ";
+        }
+        
+        moveCounter++;
         move.SaveMove(std::cout);
-        std::cout << "\n";
     }
+    std::cout << "\n";
 }
 
 int parseInput(std::string & input, Game & game)
@@ -147,6 +166,10 @@ int parseInput(std::string & input, Game & game)
     else if(input == "<")
     {
         game.PreviousMove();
+    }
+    else if(input == "<<")
+    {
+        game.FirstMove();
     }
     else if(input == "p")
     {
@@ -190,6 +213,19 @@ int parseInput(std::string & input, Game & game)
             return 1;
         }
         inputFile.close();
+    }
+    else if(input[0] == 's')
+    {
+        std::ofstream outputFile;
+        outputFile.open(&input[2]);
+        if (outputFile.fail())
+        {
+            std::cout << "Error opening file: " << &input[2] << "\n";
+            return 1;
+        }
+        std::cout << "Saving to file: " <<  &input[2] << "\n";
+        game.SaveMoves(outputFile);
+        outputFile.close();
     }
     else if(input == "q")
     {

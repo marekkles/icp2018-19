@@ -20,19 +20,19 @@ void Move::SaveMove(std::ostream & outputFile)
         outputFile << FigureTypeToChar(FigureType);
     
     if (Take)
-        outputFile << 'x';
+        outputFile << TAKE_CHAR;
     if(UseFrom)
         outputFile << ((char)(From.Coulumn - 1 + 'a')) << ((char)(From.Row - 1 + '1')); 
     
     outputFile << ((char)(To.Coulumn - 1 + 'a')) << ((char)(To.Row - 1 + '1'));
 
-    if(ChangeTo != KING && ChangeTo != PAWN && ChangeTo != NONE)
+    if(ChangeTo != NONE)
         outputFile << FigureTypeToChar(FigureType);
     
     if(Check)
-        outputFile << '+';
+        outputFile << CHECK_CHAR;
     if(Checkmate)
-        outputFile << '#';
+        outputFile << CHECKMATE_CHAR;
 }
 
 Move::Move(FigureType_t figureType, const Position & to)
@@ -86,26 +86,26 @@ Move::Move(std::string & inputMove)
         switch (fsmState)
         {
         case MoveState_FirstPositon1:
-            if (currentChar == 'D' || 
-                currentChar == 'V' || 
-                currentChar == 'K' || 
-                currentChar == 'S' ||
-                currentChar == 'J')
+            if (currentChar == QUEEN_CHAR || 
+                currentChar == ROOK_CHAR || 
+                currentChar == KING_CHAR || 
+                currentChar == BISHOP_CHAR ||
+                currentChar == KNIGHT_CHAR)
             {
                 fsmState = MoveState_Figure;
                 FigureType = FigureTypeCharToType(currentChar);
             }
-            else if (currentChar == 'x')
+            else if (currentChar == TAKE_CHAR)
             {
                 fsmState = MoveState_Take;
-                this->Take = true;
-                this->FigureType = FigureTypeCharToType('p');
+                Take = true;
+                FigureType = PAWN;
             }
             else if (currentChar >= 'a' && currentChar <= 'h')
             {
                 fsmState = MoveState_FirstPositon2;
                 positionCoulumn = currentChar;
-                this->FigureType = FigureTypeCharToType('p');
+                FigureType = PAWN;
             }
             else
             {
@@ -113,10 +113,10 @@ Move::Move(std::string & inputMove)
             }
             break;
         case MoveState_Figure:
-            if (currentChar == 'x')
+            if (currentChar == TAKE_CHAR)
             {
                 fsmState = MoveState_Take;
-                this->Take = true;
+                Take = true;
             }
             else if (currentChar >= 'a' && currentChar <= 'h')
             {
@@ -157,23 +157,23 @@ Move::Move(std::string & inputMove)
                 fsmState = MoveState_SecondPosition2;
                 positionCoulumn = currentChar;
             }
-            else if(currentChar == '#')
+            else if(currentChar == CHECKMATE_CHAR)
             {
                 fsmState = MoveState_End;
-                this->Checkmate = true;
+                Checkmate = true;
             }
-            else if(currentChar == '+')
+            else if(currentChar == CHECK_CHAR)
             {
                 fsmState = MoveState_End;
-                this->Check = true;
+                Check = true;
             }
-            else if (currentChar == 'D' || 
-                currentChar == 'V' || 
-                currentChar == 'S' ||
-                currentChar == 'J')
+            else if (currentChar == QUEEN_CHAR || 
+                currentChar == ROOK_CHAR || 
+                currentChar == BISHOP_CHAR ||
+                currentChar == KNIGHT_CHAR)
             {
                 fsmState = MoveState_Change;
-                this->ChangeTo = FigureTypeCharToType(currentChar);;
+                ChangeTo = FigureTypeCharToType(currentChar);;
             }
             else
             {
@@ -195,20 +195,20 @@ Move::Move(std::string & inputMove)
             }
             break;
         case MoveState_SecondPosition3:
-            if (currentChar == '+')
+            if (currentChar == CHECK_CHAR)
             {
                 fsmState = MoveState_End;
                 this->Check = true;
             }
-            else if (currentChar == '#')
+            else if (currentChar == CHECKMATE_CHAR)
             {
                 fsmState = MoveState_End;
                 this->Checkmate = true;
             }
-            else if (currentChar == 'D' || 
-                currentChar == 'V' || 
-                currentChar == 'S' ||
-                currentChar == 'J')
+            else if (currentChar == QUEEN_CHAR || 
+                currentChar == ROOK_CHAR || 
+                currentChar == BISHOP_CHAR ||
+                currentChar == KNIGHT_CHAR)
             {
                 fsmState = MoveState_Change;
                 this->ChangeTo = FigureTypeCharToType(currentChar);
@@ -219,12 +219,12 @@ Move::Move(std::string & inputMove)
             }
             break;
         case MoveState_Change:
-            if (currentChar == '+')
+            if (currentChar == CHECK_CHAR)
             {
                 fsmState = MoveState_End;
                 this->Check = true;
             }
-            else if (currentChar == '#')
+            else if (currentChar == CHECKMATE_CHAR)
             {
                 fsmState = MoveState_End;
                 this->Checkmate = true;

@@ -1,0 +1,10 @@
+0, MoveState_FirstPosition1
+1, MoveState_Figure
+2, MoveState_Take
+3, MoveState_Change
+4, MoveState_FirstPosition2
+5, MoveState_SecondPosition1
+6, MoveState_SecondPosition2
+7, MoveState_SecondPosition3
+8, MoveState_End
+9, MoveState_Error

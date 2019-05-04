@@ -1,0 +1,18 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="blackBishop.png">img/bishop_black.png</file>
+    <file alias="blackking.png">img/king_black.png</file>
+    <file alias="blackknight.png">img/knight_black.png</file>
+    <file alias="blackpawn.png">img/pawn_black.png</file>
+    <file alias="blackqueen.png">img/queen_black.png</file>
+    <file alias="blackrook.png">img/rook_black.png</file>
+
+	
+    <file alias="whiteBishop.png">img/bishop_white.png</file>
+    <file alias="whiteKing.png">img/king_white.png</file>
+    <file alias="whiteKnight.png">img/knight_white.png</file>
+    <file alias="whitePawn.png">img/pawn_white.png</file>
+    <file alias="whiteQueen.png">img/queen_white.png</file>
+    <file alias="whiteRook.png">img/rook_white.png</file>
+</qresource>
+</RCC>

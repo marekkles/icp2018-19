@@ -57,6 +57,7 @@ public:
 	FigureBase * GetFigureAt(Position & position);
 	bool NextMove();
 	void PreviousMove();
+	void FirstMove();
 	bool UserMove(Move & move);
 	bool LoadMoves(std::ifstream & inputFile);
 	void SaveMoves(std::ostream & outputFile);
